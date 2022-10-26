@@ -368,7 +368,7 @@ Not all options are required, so if you only wish to increase the length of the 
 \titleruler{10cm}{}{}{2.5mm}
 ```
 
-[!Customisable Title][ruler]
+![Customisable Title][ruler]
 
 [bookmark]: ./images/pdf_bookmark.png
 [phd-final-fr]: ./images/phd_final_fr.png
