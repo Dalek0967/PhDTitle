@@ -24,7 +24,7 @@ This CST version provides the necessary information for the report without the n
 
 To use this style, simply place the `phdtitle.sty` file in your working directory and include it in your main TeX file.
 The PhDTitle package redefines the `\maketitle` command to generate the front page.
-As such, you can use the `\author{#1}` command the define your own name.
+As such, you can use the `\author{#1}` command to set your own name.
 
 ```LaTeX
 \usepackage{phdtitle} % import package
@@ -93,7 +93,7 @@ The main format remains the same, however, some information is changed between t
 This version is the default format of the style.
 Here we need to add two new elements: defence date and the jury members.
 To do this, we add two new commands:
-* `\datedefended{#1}{#2}: the date of the thesis defence. Once again this is in two versions: English followed by French.
+* `\datedefended{#1}{#2}`: the date of the thesis defence. Once again this is in two versions: English followed by French.
 * `\jurymember{#1}{#2}{#3}{#4}{#5}`: adds a new person to the list of jury members and can be used as many times as needed.
 
 > ⚠️ the `\jurymember` command is order specific, thus jury members wuill be printed in the order they are added
@@ -168,7 +168,7 @@ To select this format, you must use the following
 ```
 
 Since this corresponds to the review version, only one new command is added, corresponding to the submission date:
-* `\datesubmitted{#1}{#2}: the date of the submission to the reviewers, once again in English and French
+* `\datesubmitted{#1}{#2}`: the date of the submission to the reviewers, once again in English and French
 
 The example from my thesis is as follows
 
@@ -335,7 +335,7 @@ However, these can be overriden and customised as required with the following co
 \renewcommand{\logoULille}{logos/Univ_Lille_Logo} # set the university logo
 ```
 
-As can be seen in my thesis and CST report, there is also another logo, that of the project which finaced my work.
+As can be seen in my thesis and CST report, there is also another logo, that of the project which financed my work.
 This logo is optional, but if requeted will be appended to the row of logos, moving the university into the centre position:
 
 ```LaTeX
