@@ -79,6 +79,7 @@ Below are the commands used in my own thesis, visible on the examples provided.
 ```
 
 > ℹ️ The first field of the `\title` command is used as the PDF title, and is also set as the PDF bookmark for the first page
+
 > ![PDF Bookmark][bookmark]
 
 ### Thesis versions
