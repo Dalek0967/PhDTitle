@@ -1,0 +1,666 @@
+% ====================================================
+% PhDTitle Package
+% By Edward Staddon
+% version 2.1
+%
+% Adds a custom PhD title page to any document using the \maketitle command
+% Now supports single CST front cover automatically in document language
+%
+% Changelog:
+% V2.1.0 - 26th October 2022
+%          Corrected no newpage bug with CST
+%          Updated ULille logo
+%		   Resized logos to 120pt width each, reducing their size making them less imposing
+% V2.0.3 - 5th October 2022
+%          Spelling mistake on French front cover
+% V2.0.2 - 17th September 2022
+%          Removed \mainmatter command from phd environment with kaobook as was breaking other
+%          front page numbering
+%          Added commands to set PDF title and add front page hyperlink
+% V2.0.1 - 14th September 2022
+%          Corrected bug where jury members where only shown in French
+% V2.0.0 - 4th September 2022
+%          Overhaul of PhD title generation methodology
+%          Added more customisable language options for PhD title page with
+%          single page format instead of two (one per language as originally added in V1.0)
+%          Single CST integration complete and new language organisation on par with PhD title
+%          Language of CST page is set directly through the babel import package in main document
+%          Full (?) compatibility with 'scrbook', 'book' and 'extarticle' classes with a4paper format
+% V1.2.0 - 11th August 2022
+%          Corrected issues with dedication overriding 'kaobook' variables and stopping proper
+%          paragraph alignment in main document
+%          Partial compatibility extended to cover class 'book'
+% V1.1.0 - 21st July 2022
+%          Initial incorporation of CST page, but very buggy
+%          Partial compatibility with base class 'scrbook'
+% V1.0.0 - 19th June 2022
+%          Initial creation with kaobook
+% ====================================================
+
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{phdtitle}[2022/09/21 PhD Title Page for Thesis and Intermediate Report]
+\PackageWarningNoLine{phdtitle}{Using PhD Title - Overloads generic maketitle}
+
+% ====================================================
+% Package Requirements
+% ====================================================
+\RequirePackage{graphicx}   % For image inclusion
+\RequirePackage{ifthen}     % For param check
+\RequirePackage[T1]{fontenc}
+
+% ====================================================
+% Language Setup
+%
+% Allows multiple language versions.
+% Defaults are english and french, with english being
+% the prevailing default.
+% ====================================================
+
+% Thesis specific
+\newcommand{\school}{}
+\newcommand{\doctoral}{}
+\newcommand{\research}{}
+\newcommand{\preparedby}{}
+\newcommand{\grade}{}
+\newcommand{\discipline}{}
+\newcommand{\titletext}{}
+\newcommand{\defended}{}
+\newcommand{\jury}{}
+\newcommand{\submitted}{}
+% CST specific
+\newcommand{\phdstudent}{}
+\newcommand{\datestitle}{}
+\newcommand{\supervisorstitle}{}
+\newcommand{\academicyeartitle}{}
+
+\addto\captionsenglish{
+    % Thesis specific
+    \renewcommand{\school}{\univEN}
+    \renewcommand{\doctoral}{\doctEN}
+    \renewcommand{\research}{Research Institute\xspace\laboEN}
+    \renewcommand{\preparedby}{Thesis prepared by}
+    \renewcommand{\grade}{with the view of obtaining the degree of\xspace\textbf{\degreeEN}}
+    \renewcommand{\discipline}{Discipline\xspace\textbf{\speciEN}}
+    \renewcommand{\titletext}{\titleEN}
+    \renewcommand{\defended}{Thesis defended the\xspace\defEN\xspace in-front of the jury comprised of:}
+    \renewcommand{\jury}{\juryEN}
+    \renewcommand{\submitted}{Thesis submitted to the reviewers on the\xspace\subEN}
+    % CST specific
+    \renewcommand{\phdstudent}{PhD Student}
+    \renewcommand{\datestitle}{Dates}
+    \renewcommand{\supervisorstitle}{Supervisors}
+    \renewcommand{\academicyeartitle}{Academic year}
+}
+
+\addto\captionsfrench{
+    % Thesis specific
+    \renewcommand{\school}{\univFR}
+    \renewcommand{\doctoral}{\doctFR}
+    \renewcommand{\research}{Institut de Recherche\xspace\laboFR}
+    \renewcommand{\preparedby}{Thèse préparée par}
+    \renewcommand{\grade}{en vue de l’obtention du grade de\xspace\textbf{\degreeFR}}
+    \renewcommand{\discipline}{Discipline\xspace\textbf{\speciFR}}
+    \renewcommand{\titletext}{\titleFR}
+    \renewcommand{\defended}{Thèse soutenue le\xspace\defFR\xspace devant le jury composé de :}
+    \renewcommand{\jury}{\juryFR}
+    \renewcommand{\submitted}{Thèse soumise aux rapporteurs pour examination le\xspace\subFR}
+    % CST specific
+    \renewcommand{\phdstudent}{Doctorant}
+    \renewcommand{\datestitle}{Dates}
+    \renewcommand{\supervisorstitle}{Encadrants}
+    \renewcommand{\academicyeartitle}{Année Académique}
+}
+
+% Add languages here
+
+% ====================================================
+% Environment setup for full page title
+% ====================================================
+
+% This library was built to work with koma-script, in particular kaobok usinc scrbook.
+% However, if kaobook is not loaded, then a custom environment is created, allowing for
+% a full page, no margin, layout for the cover
+\@ifclassloaded{kaobook}
+{
+    \newenvironment{phdtitlepage}[1]{\frontmatter}{}
+}
+{
+    % Define lengths to set the scale of the document. Changing these 
+    % lengths should affect the dimensions of the front cover pages
+    % (these are taken from kaobook with reduced fuctionnality, working
+    % only with a4 size paper
+    \newlength{\hscale}
+    \newlength{\vscale}
+    
+    % By default, the scales are set to work for a4paper
+    \setlength{\hscale}{1mm}
+    \setlength{\vscale}{1mm}
+
+    % The geometry package with default class dimensions are required
+    % to reshape the title page. The scrextend package is used to allow
+    % page skips for alternate titles and the dedication (if present)
+    \RequirePackage[pass]{geometry}
+    \RequirePackage{scrextend}
+
+    % This environment resets the page geometry to wide, allowing for
+    % a full page spread.
+    % These values can be updated, and will change the margins as a consequence
+    % Caution is advised
+    % 
+    % Once the environment is complete, the original class geometry is restored
+    \newenvironment{phdtitlepage}[1]
+    {
+        \newgeometry{
+    		top=27.4\vscale,
+    		bottom=27.4\vscale,
+    		inner=24.8\hscale,
+    		outer=24.8\hscale,
+    		marginparsep=0mm,
+    		marginparwidth=0mm,
+    	}
+        \thispagestyle{empty}
+    }
+    {
+        \newpage
+        \aftergroup\restoregeometry
+    }
+}
+
+% ====================================================
+% Default variables
+% ====================================================
+
+% -----
+% Image URLs
+% -----
+\newcommand{\logoInria}{logos/INRIA_logo}
+\newcommand{\logoULille}{logos/Univ_Lille_Logo}
+
+% -----
+% Default title ruler values
+% -----
+\newcommand{\defaulttitletoprulerlen}{2.5cm}
+\newcommand{\defaulttitletoprulerwidth}{0.2mm}
+\newcommand{\defaulttitlebottomrulerlen}{2.5cm}
+\newcommand{\defaulttitlebottomrulerwidth}{0.2mm}
+
+% -----
+% Set title ruler to default values
+% -----
+\newcommand{\titletoprulerlen}{\defaulttitletoprulerlen}
+\newcommand{\titletoprulerwidth}{\defaulttitletoprulerwidth}
+\newcommand{\titlebottomrulerlen}{\defaulttitlebottomrulerlen}
+\newcommand{\titlebottomrulerwidth}{\defaulttitlebottomrulerwidth}
+
+% -----
+% Default boolean variables
+% -----
+\newif\ifdefinitif\definitiftrue        % Definitive version, changes the title page to final version
+\newif\ifenglishonly\englishonlyfalse   % English title page only flag, exclusive with \iffrenchonly
+\newif\iffrenchonly\frenchonlyfalse     % French title page only flag, exclusive with \ifenglishonly
+\newif\ifextraimage\extraimagefalse     % Extra image flag, defined if a 3rd image is added to the title page
+\newif\ifalldefined\alldefinedtrue      % Flag to identify if any option is not defined and stop running
+\newif\ifcst\cstfalse                   % Flag to replace the PhD thesis title page with a smaller CST version
+
+% Empty jury variables
+\newcommand{\juryEN}{ }
+\newcommand{\juryFR}{ }
+
+% ====================================================
+% Helper functions
+% ====================================================
+
+% -----
+% Title ruler config function
+% Allows customisation of the rulers around the title
+%
+% Opt:          The length of the top ruler
+% Opt:          The width of the top ruler
+% Opt:          The length of the bottom ruler
+% Opt:          The width of the bottom ruler
+% -----
+\newcommand{\titleruler}[4]{%
+    \ifthenelse{\equal{#1}{}}{\renewcommand{\titletoprulerlen}{\defaulttitletoprulerlen}}{\renewcommand{\titletoprulerlen}{#1}}
+    \ifthenelse{\equal{#2}{}}{\renewcommand{\titletoprulerwidth}{\defaulttitletoprulerwidth}}{\renewcommand{\titletoprulerwidth}{#2}}
+    \ifthenelse{\equal{#3}{}}{\renewcommand{\titlebottomrulerlen}{\defaulttitlebottomrulerlen}}{\renewcommand{\titlebottomrulerlen}{#3}}
+    \ifthenelse{\equal{#4}{}}{\renewcommand{\titlebottomrulerwidth}{\defaulttitlebottomrulerwidth}}{\renewcommand{\titlebottomrulerwidth}{#4}}
+}
+
+% -----
+% Variable definition checker
+% Checks to see if all variables needed to create the title page have been
+% correctly defined. Print an error if missing and set the \ifalldefined
+% boolean to false
+% -----
+\newcommand{\checkvariables}{%
+    \ifthenelse{\isundefined{\titleEN}\OR\isundefined{\titleFR}}{%
+        \PackageError{phdtitle}{\protect\title\space is not set}{Please use \protect\title\space to define the title of the thesis}
+        \alldefinedfalse
+    }{}
+    \ifthenelse{\isundefined{\univEN}\OR\isundefined{\univFR}}{%
+        \PackageError{phdtitle}{\protect\university\space is not set}{Please use \protect\university\space to define the name of the university}
+        \alldefinedfalse
+    }{}
+    \ifthenelse{\isundefined{\laboEN}\OR\isundefined{\laboFR}}{%
+        \PackageError{phdtitle}{\protect\laboratory\space is not set}{Please use \protect\laboratory\space to define the name of the laboratory}
+        \alldefinedfalse
+    }{}
+    \ifthenelse{\isundefined{\doctEN}\OR\isundefined{\doctFR}}{%
+        \PackageError{phdtitle}{\protect\doctoralschool\space is not set}{Please use \protect\doctoralschool\space to define the name of the doctoral school}
+        \alldefinedfalse
+    }{}
+    \ifcst
+        \ifthenelse{\isundefined{\academicyeardate}}{%
+            \PackageError{phdtitle}{\protect\academicyear\space is not set}{Please use \protect\academicyear\space to define the start and end of the current academic year in format 'YYYY'}
+            \alldefinedfalse
+        }{}
+        \ifthenelse{\isundefined{\supervisornames}}{%
+            \PackageError{phdtitle}{\protect\supervisors\space is not set}{Please use \protect\supervisors\space to define names of the PhD supervisors}
+            \alldefinedfalse
+        }{}
+        \ifthenelse{\isundefined{\phddates}}{%
+            \PackageError{phdtitle}{\protect\dates\space is not set}{Please use \protect\dates\space to define the start and end dates of your thesis in format "DD/MM/YYYY"}
+            \alldefinedfalse
+        }{}
+    \else
+        \ifthenelse{\isundefined{\speciEN}\OR\isundefined{\speciFR}}{%
+            \PackageError{phdtitle}{\protect\speciality\space is not set}{Please use \protect\speciality\space to define the thesis' speciality}
+            \alldefinedfalse
+        }{}
+        \ifthenelse{\isundefined{\degreeEN}\OR\isundefined{\degreeFR}}{%
+            \PackageError{phdtitle}{\protect\degree\space is not set}{Please use \protect\degree\space to define the degree targeted by the thesis}
+            \alldefinedfalse
+        }{}
+        \ifdefinitif
+            \ifthenelse{\isundefined{\defEN}\OR\isundefined{\defFR}}{%
+                \PackageError{phdtitle}{\protect\datedefended\space is not set}{Please use \protect\datedefended\space to define the date the PhD was defended}
+                \alldefinedfalse
+            }{}
+            \ifthenelse{\equal{\juryEN}{ }\OR\equal{\juryFR}{ }}{%
+                \PackageError{phdtitle}{\protect\jurymember\space has not been used}{Please use \protect\jurymember\space to add at least one member to the PhD jury}
+                \alldefinedfalse
+            }{}
+        \else
+            \ifthenelse{\isundefined{\subEN}\OR\isundefined{\subFR}}{%
+                \PackageError{phdtitle}{\protect\datesubmitted\space is not set}{Please use \protect\datesubmitted\space to define the date the thesis was submitted}
+                \alldefinedfalse
+            }{}
+        \fi%
+    \fi%
+}
+
+% -----
+% Print title command
+% Prints the title surrounded by rulers. The ruler configuration can be changed
+% using the \titleruler command
+%
+% Param:        The title to print
+% -----
+\newcommand{\printtitle}[1]{
+\rule{\titletoprulerlen}{\titletoprulerwidth}\\[0.4cm]
+% {\LARGE\bfseries #1}\\[0.8cm]
+% {\Large #2}\\[0.1cm]
+{\Huge\bfseries #1}\\[0.4cm]
+\rule{\titlebottomrulerlen}{\titlebottomrulerwidth}
+}
+
+% -----
+% Print subtitle command
+% Prints the main title with a small subtitle below, surrounded by rulers.
+% The ruler configuration can be changed using the \titleruler command
+%
+% Param:        The title to print
+% -----
+\newcommand{\printsubtitle}[2]{
+\rule{\titletoprulerlen}{\titletoprulerwidth}\\[0.4cm]
+{\LARGE\bfseries #1}\\[0.8cm]
+{\Large #2}\\[0.1cm]
+\rule{\titlebottomrulerlen}{\titlebottomrulerwidth}
+}
+
+% -----
+% Extra image command
+% Allows to add a third image to be added to the title header on the far right
+%
+% Param:        The URL of the image
+% -----
+\newcommand{\extraimage}[1]{%
+    \extraimagetrue
+    \newcommand{\extraimageurl}{#1}
+}%
+
+% -----
+% Title config command
+% Sets the titles in English and French
+%
+% Param:        The English title
+% Param:        The French title
+%
+% This command is also used for the CST front page
+% in which case, the parameters change:
+%
+% Param:        Main title in selected language
+% Param:        Subtitle in selected language
+% -----
+\renewcommand{\title}[2]{%
+    \newcommand{\titleEN}{#1}
+    \newcommand{\titleFR}{#2}
+    \hypersetup{pdftitle={\titleEN}}
+}
+
+% -----
+% University config command
+% Sets the name of the university in English and French
+%
+% Param:        The university name in English
+% Param:        The university name in French
+%
+% This command is also used for the CST front page
+% in which case only the first option is used and the
+% second is ignored.
+% -----
+\newcommand{\university}[2]{%
+    \newcommand{\univEN}{#1}
+    \newcommand{\univFR}{#2}
+}
+
+% -----
+% Laboratory config command
+% Sets the name of the laboratory in English and French
+%
+% Param:        The laboratory name in English
+% Param:        The laboratory name in French
+%
+% This command is also used for the CST front page
+% in which case only the first option is used and the
+% second is ignored.
+% -----
+\newcommand{\laboratory}[2]{%
+    \newcommand{\laboEN}{#1}
+    \newcommand{\laboFR}{#2}
+}
+
+% -----
+% Doctoral School config command
+% Sets the name of the doctoral school in English and French
+%
+% Param:        The doctoral school name in English
+% Param:        The doctoral school name in French
+%
+% This command is also used for the CST front page
+% in which case only the first option is used and the
+% second is ignored.
+% -----
+\newcommand{\doctoralschool}[2]{%
+    \newcommand{\doctEN}{#1}
+    \newcommand{\doctFR}{#2}
+}
+
+% ====================================================
+% Thesis specific functions
+% ====================================================
+
+% -----
+% PhD speciality config command
+% Sets the name of the PhD speciality in English and French
+%
+% Param:        The speciality in English
+% Param:        The speciality in French
+% -----
+\newcommand{\speciality}[2]{%
+    \newcommand{\speciEN}{#1}
+    \newcommand{\speciFR}{#2}
+}
+
+% -----
+% PhD degree config command
+% Sets the name of the PhD degree in English and French
+%
+% Param:        The degree in English
+% Param:        The degree in French
+% -----
+\newcommand{\degree}[2]{%
+    \newcommand{\degreeEN}{#1}
+    \newcommand{\degreeFR}{#2}
+}
+
+% -----
+% Date submitted config command
+% Sets the date the manuscript was submitted in English and French
+%
+% Param:        The date in English
+% Param:        The date in French
+% -----
+\newcommand{\datesubmitted}[2]{%
+    \newcommand{\subEN}{#1}
+    \newcommand{\subFR}{#2}
+}
+
+% -----
+% Date defended config command
+% Sets the date the PhD was defended in English and French
+%
+% Param:        The date in English
+% Param:        The date in French
+% -----
+\newcommand{\datedefended}[2]{%
+    \newcommand{\defEN}{#1}
+    \newcommand{\defFR}{#2}
+}
+
+% -----
+% Jury member config command
+% Adds jury members with their names, affiliation and role in English and French
+%
+% Param:        The name
+% Param:        The affiliation in English
+% Param:        The role in English
+% Param:        The affiliation in French
+% Param:        The role in French
+% -----
+\newcommand{\jurymember}[5]{%
+    \expandafter\def\expandafter\juryEN\expandafter{\juryEN {}\noindent\textbf{#1} \hfill \textbf{#2}\\#3\\}
+    \expandafter\def\expandafter\juryFR\expandafter{\juryFR {}\noindent\textbf{#1} \hfill \textbf{#4}\\#5\\}
+}
+
+% ====================================================
+% CST specific functions
+% ====================================================
+
+% -----
+% Current accademic year
+% Sets the current academic year for the CST report
+%
+% Param:        Start year
+% Param:        End year
+% -----
+\newcommand{\academicyear}[2]{%
+    \newcommand{\academicyeardate}{#1 - #2}
+}
+
+% -----
+% PhD Supervisors
+% Sets the names of both PhD supervisors. If there is
+% only one superviser, the second option is left blank
+%
+% Param:        Primary PhD supervisor
+% Param:        Secondary PhD supervisor, if available
+% -----
+\newcommand{\supervisors}[2]{%
+    \newcommand{\supervisornames}{#1\\#2}
+}
+
+% -----
+% PhD dates
+% Sets the start and end dates of the PhD contract in
+% whatever format desired
+%
+% Param:        The start date
+% Param:        The end date
+% -----
+\newcommand{\dates}[2]{%
+    \newcommand{\phddates}{#1 - #2}
+}
+
+% ====================================================
+% Title Functions
+% ====================================================
+
+% -----
+% Title Page PhD
+% Print the PhD thesis title page in the currently selected language using the parameters
+% provided.
+% -----
+\newcommand{\titlepagePhD}{%
+
+    \begin{center}
+    \includegraphics[width=120pt]{\logoInria}
+    \hfill
+    \includegraphics[width=120pt]{\logoULille}
+    \ifextraimage
+        \hfill
+        \includegraphics[width=120pt]{\extraimageurl}
+    \fi%
+    
+    \vspace*{1.5cm}
+    \textsc{\LARGE \school}\\[0.25cm]
+    \textsc{\LARGE \doctoral}\\[0.25cm]
+    \textsc{\LARGE \research}\\[0.25cm]
+    \vfill
+    \large \preparedby\xspace\textbf{\@author} \\
+    \large \grade \\
+    \large \discipline \\[0.5cm]
+    \printtitle{\titletext}\\[0.5cm]
+    \end{center}
+    
+    \ifdefinitif
+        \noindent\large \defended\\[0.5cm]
+        \jury
+    \else
+        \begin{center}
+            \noindent\large \submitted.
+        \end{center}
+    \fi
+    \vfill
+}
+
+% -----
+% CST Title page
+% Print the title page for the CST report in the main language of the document
+% -----
+\newcommand{\titlepageCST}{%
+
+    \begin{center}
+    \includegraphics[width=120pt]{\logoInria}
+    \hfill
+    \includegraphics[width=120pt]{\logoULille}
+    \ifextraimage
+        \hfill
+        \includegraphics[width=120pt]{\extraimageurl}
+    \fi%
+    \noindent\rule{\linewidth}{0.2mm}
+    \vspace*{0.5cm}
+
+    \textsc{\LARGE \laboEN}\\[0.5cm]
+    \textsc{\LARGE \univEN}\\[0.25cm]
+    \textsc{\LARGE \doctEN}
+
+    \vfill
+    \printsubtitle{\titleEN}{\titleFR}\\[0.5cm]
+    \end{center}
+
+    \noindent\begin{minipage}{0.4\textwidth}
+        \begin{flushleft}
+            \large
+                \textit{\phdstudent}\\
+                {\bfseries \@author}
+        \end{flushleft}
+    \end{minipage}
+    \hfill
+    \begin{minipage}{0.4\textwidth}
+        \begin{flushright}
+            \large
+                \textit{\supervisorstitle}\\
+                {\bfseries \supervisornames}
+        \end{flushright}
+    \end{minipage}
+    
+    \medskip{}
+    
+    \noindent\begin{minipage}{0.4\textwidth}
+        \begin{flushleft}
+            \large
+            \textit{\datestitle}\\
+            {\bfseries \phddates}
+        \end{flushleft}
+    \end{minipage}
+    \vfill
+    \noindent\rule{\linewidth}{0.2mm}
+    \begin{center}
+        \academicyeartitle\xspace\academicyeardate
+    \end{center}
+    \newpage
+}
+
+% ====================================================
+% Maketitle Overload
+%
+% Overload \maketitle function to replace the default titlepage with this version
+% This function prints either the CST title page, or the correct sequence of pages required
+% by the University of Lille docotral school for PhD thesis'.
+% This function prints first the French title page followed by the English title page,
+% both separated by a blank page. The dedication page is added following the last title
+% page, itself followed by a blank page to separate from the rest.
+%
+% By using the \englishonlytrue or \frenchonlytrue, either title page language can be
+% selected over the other. The default operation allows both to be printed. Of both
+% boolean functions are set, an error is raised and no title page is printed.
+% The option \csttrue bypasses the PhD thesis pages and prints only a sigle title page for
+% CST reports.
+% ====================================================
+
+\renewcommand{\maketitle}{%
+    \pdfbookmark[chapter]{\titleEN}{title}
+
+    \checkvariables
+    \ifalldefined
+        \begin{phdtitlepage}
+    
+            \ifcst
+                \titlepageCST
+            \else
+                \iffrenchonly
+                    \ifenglishonly
+                        \PackageError{phdtitle}{\protect\englishonly\space and \protect\frenchonly\space cannot be set at the same time}{Both \protect\englishonly\space and \protect\frenchonly\space have been set, if both are needed please clear both flags}
+                    \else
+                        \begin{otherlanguage}{french}%
+                            \titlepagePhD
+                        \end{otherlanguage}
+                    \fi%
+                \else
+                    \ifenglishonly
+                        \begin{otherlanguage}{english}%
+                            \titlepagePhD
+                        \end{otherlanguage}
+                    \else
+                        \begin{otherlanguage}{french}%
+                            \titlepagePhD
+                        \end{otherlanguage}
+                        \cleardoubleemptypage
+                        \begin{otherlanguage}{english}%
+                            \titlepagePhD
+                        \end{otherlanguage}
+                    \fi%
+                \fi%
+                
+                \cleardoubleemptypage
+                \ifdefined\dedication
+                    \vspace*{\fill}
+                    {\centering\usekomafont{dedication}{\@dedication \par}}%
+                    \vskip \z@ \@plus3fill
+                    \cleardoubleemptypage
+                \fi%
+            \fi%
+        \end{phdtitlepage}
+    \fi%
+}
